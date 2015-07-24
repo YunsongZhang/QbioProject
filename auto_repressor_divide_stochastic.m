@@ -15,7 +15,7 @@ close all
 clc
 
 V0=1;                    % Initial Volume
-T_divide=10;             % period of cell division
+T_divide=20;             % period of cell division
 Volume=@(t) V0*exp(log(2).*t/T_divide);
 
 % chemical model definition
@@ -38,89 +38,81 @@ T_nextdelay=[NaN];
 timenow=0;           % real time
 time_in_gen=0;       % time in each generation, put to 0 at each division
 numR=0;
+generation=1;       % number of generation
 c=log(2)/T_divide;
+cells={};
 %%
-while timenow<Tmax
-    V=Volume(timenow);
-    propensity=Model.K(numR/V);
-    K_sum=sum(propensity);
-    delta_t=log(K_sum/(K_sum+c*log(rand())))/c;
-%     T_nextdelay(find(T_nextdelay<timenow))=[];
-%     if numR==0
-%         timenow=timenow+Model.tau;
-%         numR=numR+1;
-%         T_rec(end+1)=timenow;
-%         numR_rec(end+1)=numR;
-%         disp('cont');
-%         %timenow
-%         %T_nextdelay
-%         continue;        
-%     end
-         
-    if timenow+delta_t>1000000 %T_divide
-        test=1;
-        % cell divides
-        %disp('Cell divides');
-    elseif timenow+delta_t>min(T_nextdelay) %%&& timenow<min(T_nextdelay)
-       test=2; min(T_nextdelay)
-        % a delay reaction occurs
-        timenow=min(T_nextdelay);
-        T_rec(end+1)=timenow;
-        numR=numR+1;
-        numR_rec(end+1)=numR;
-        ind=find(T_nextdelay==min(T_nextdelay));
-        T_nextdelay(ind)=[];
-        
-        
-        
-        
-    elseif rand()<propensity(1)/K_sum
-        test=3;
-        % a delayed reaction in preparation
-        timenow=timenow+delta_t;
-        T_nextdelay(end+1)=timenow+Model.tau;
-        T_nextdelay=unique(T_nextdelay);
-        
-        
-        
-        
-    else
-        test=4;
-        % a reaction occurs immediately       
-        timenow=timenow+delta_t;
-        numR=numR-1;
-        T_rec(end+1)=timenow;
-        numR_rec(end+1)=numR;
-    end
-    
-    if delta_t<0
-        error('strange delta_t');
-    end
-%     if T_rec(end)<T_rec(end-1)
-%         error('time back!');
-%     end
+
+      rng('shuffle');
+      
+       [T_rec,numR_rec,con_rec]=stochastic_reaction(numR,Model,Volume,T_divide);
+       cells{1}={[T_rec;numR_rec;con_rec]};
        
+       numTotal=numR_rec(end);
+       
+       numR1=floor(numTotal*0.5);
+       numR2=numTotal-numR1;
+       [T_rec1,numR_rec1,con_rec1]=stochastic_reaction(numR1,Model,Volume,T_divide*(1+0.2*rand()));
+       [T_rec2,numR_rec2,con_rec2]=stochastic_reaction(numR2,Model,Volume,T_divide*(1+0.2*rand()));
+       cells{2}={[T_rec1;numR_rec1;con_rec1],[T_rec2;numR_rec2;con_rec2]};
+      % timenow=timenow+T_divide;
+      % generation=generation+1;
+   
+     figure(1)
+     plot(T_rec,numR_rec)
+     title('generation 1, number of R');
+     shg
+     
+     figure(2)
+     plot(T_rec,con_rec)
+     title('generation 1, concentration of R');
+     shg
+     
+     figure(3)
+     plot(T_rec1,numR_rec1)
+     title('generation 2, number of R,cell1');
+     shg
+     
+     figure(4)
+     plot(T_rec1,con_rec1)
+     title('generation 2, concentration of R,cell1');
+     shg
+     
+     figure(5)
+     plot(T_rec2,numR_rec2)
+     title('generation 2, number of R,cell2');
+     shg    
+     
+      figure(6)
+     plot(T_rec2,con_rec2)
+     title('generation 2, concentration of R,cell2');
+     shg       
+     
+     figure(7)
+     plot(T_rec1,con_rec1)
+     hold on
+     plot(T_rec2,con_rec2)
+     legend('cell1','cell2')
+     shg
         
-  
-   timenow
-        
-
-end
-
-figure(1)
-handle=plot(T_rec,numR_rec);
-xlim([min(T_rec),max(T_rec)])
-titlename=sprintf('number of r, T_division=%d',T_divide);
-title(titlename)
-picname=sprintf('./Td%dnum',T_divide);
-saveas(handle,picname,'jpg');
+   
 
 
 
-figure(2)
-handle=plot(T_rec,numR_rec./Volume(T_rec));
-xlim([min(T_rec),max(T_rec)])
-titlename=sprintf('concentration of r, T_division=%d',T_divide);
-title(titlename)
-picname=sprintf('./Td%dcon',T_divide);
-saveas(handle,picname,'jpg');
+% figure(1)
+% handle=plot(T_rec,numR_rec);
+% xlim([min(T_rec),max(T_rec)])
+% titlename=sprintf('number of r, T_division=%d',T_divide);
+% title(titlename)
+% picname=sprintf('./Td%dnum',T_divide);
+%saveas(handle,picname,'jpg');
+
+
+
+% figure(2)
+% handle=plot(T_rec,numR_rec./Volume(T_rec));
+% xlim([min(T_rec),max(T_rec)])
+% titlename=sprintf('concentration of r, T_division=%d',T_divide);
+% title(titlename)
+% picname=sprintf('./Td%dcon',T_divide);
+%saveas(handle,picname,'jpg');

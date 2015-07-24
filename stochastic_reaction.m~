@@ -1,0 +1,21 @@
+function [Trec,num_rec,con_rec]=stochastic_reaction(InitialNum,Model,Volume,T_divide)
+
+time_in_gen=0;
+numR=InitialNum;
+c=log(2)/T_divide;
+
+while time_in_gen<T_divide
+    
+propensity=Model.K(numR/Volume(time_in_gen));
+K_sum=sum(propensity);
+delta_t=log(K_sum/(K_sum+c*log(rand())))/c;
+
+if timenow+delta_t>min(T_nextdelay) %%&& timenow<min(T_nextdelay)
+       test=2; min(T_nextdelay)
+        % a delay reaction occurs
+        timenow=min(T_nextdelay);
+        T_rec(end+1)=timenow;
+        numR=numR+1;
+        numR_rec(end+1)=numR;
+        ind=find(T_nextdelay==min(T_nextdelay));
+        T_nextdelay(ind)=[];
